@@ -1,4 +1,3 @@
-TEST_DIRS := $(shell find . -type d -name '__tests__')
 
 dev:
 	gin

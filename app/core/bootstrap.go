@@ -20,6 +20,7 @@ func Bootstrap() *fx.App {
 	return fx.New(
 		Modules,
 		fx.Invoke(runnerHook),
+		fx.NopLogger,
 	)
 }
 
