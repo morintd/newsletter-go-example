@@ -2,17 +2,15 @@ package article
 
 import (
 	"net/http"
-	"newsletter/app/article/model"
-	repositorypkg "newsletter/app/article/repository"
-	commonservicepkg "newsletter/app/common/service"
+	"newsletter/app/common"
 
 	"github.com/gin-gonic/gin"
 )
 
 type ArticleController struct {
-	repository    repositorypkg.IArticleRepository
-	slugGenerator commonservicepkg.ISlugGenerator
-	idGenerator   commonservicepkg.IIDGenerator
+	repository    IArticleRepository
+	slugGenerator common.ISlugGenerator
+	idGenerator   common.IIDGenerator
 }
 
 func (controller *ArticleController) FindByPage(c *gin.Context) {
@@ -21,14 +19,14 @@ func (controller *ArticleController) FindByPage(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindQuery(&input); err != nil {
-		c.Status(http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{})
 		return
 	}
 
 	pages, articles, err := controller.repository.FindByPage(*input.Page)
 
 	if err != nil {
-		c.Status(http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{})
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -44,15 +42,15 @@ func (controller *ArticleController) Create(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.Status(http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{})
 		return
 	}
 
-	article := model.Article{ID: controller.idGenerator.Generate(), Title: input.Title, Slug: controller.slugGenerator.Generate(input.Title), Content: input.Content}
+	article := common.Article{ID: controller.idGenerator.Generate(), Title: input.Title, Slug: controller.slugGenerator.Generate(input.Title), Content: input.Content}
 	err := controller.repository.Create(&article)
 
 	if err != nil {
-		c.Status(http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{})
 	}
 
 	c.JSON(201, article)
@@ -64,24 +62,32 @@ func (controller *ArticleController) FindBySlug(c *gin.Context) {
 	}
 
 	if err := c.ShouldBindUri(&input); err != nil {
-		c.Status(http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{})
 		return
 	}
 
 	article, err := controller.repository.FindBySlug(input.Slug)
 
 	if err != nil {
-		c.Status(http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{})
 	}
 
 	if article != nil {
 		c.JSON(http.StatusOK, article)
 	} else {
-		c.Status(http.StatusBadRequest)
+		c.JSON(http.StatusBadRequest, gin.H{})
 	}
-
 }
 
-func NewArticleController(repository repositorypkg.IArticleRepository, slugGenerator commonservicepkg.ISlugGenerator, idGenerator commonservicepkg.IIDGenerator) *ArticleController {
+func (controller *ArticleController) Configure(r *gin.Engine) {
+	article := r.Group("/article")
+	{
+		article.GET("", controller.FindByPage)
+		article.POST("", controller.Create)
+		article.GET(":slug", controller.FindBySlug)
+	}
+}
+
+func NewArticleController(repository IArticleRepository, slugGenerator common.ISlugGenerator, idGenerator common.IIDGenerator) *ArticleController {
 	return &ArticleController{repository, slugGenerator, idGenerator}
 }

@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"newsletter/app/article/model"
-	"newsletter/app/article/repository"
+	"newsletter/app/article"
+	"newsletter/app/common"
 	"newsletter/app/core"
 
 	"github.com/gin-gonic/gin"
@@ -18,10 +18,10 @@ import (
 
 var _ = Describe("GET /article?page=:page", Ordered, func() {
 	var r *gin.Engine
-	var articleRepository repository.IArticleRepository
+	var articleRepository article.IArticleRepository
 	var app *fx.App
 
-	articles := []model.Article{
+	articles := []common.Article{
 		{
 			ID:      "1",
 			Title:   "title-1",
@@ -55,7 +55,7 @@ var _ = Describe("GET /article?page=:page", Ordered, func() {
 	}
 
 	BeforeAll(func() {
-		app = fx.New(core.Modules, fx.Invoke(func(lifecycle fx.Lifecycle, engine *gin.Engine, a repository.IArticleRepository) {
+		app = fx.New(core.Modules, fx.Invoke(func(lifecycle fx.Lifecycle, engine *gin.Engine, a article.IArticleRepository) {
 			lifecycle.Append(
 				fx.Hook{
 					OnStart: func(context.Context) error {

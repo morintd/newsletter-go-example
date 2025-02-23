@@ -1,14 +1,24 @@
-package repository
+package article
 
 import (
-	"newsletter/app/article/model"
+	"newsletter/app/common"
 )
 
-type InMemoryArticleRepository struct {
-	Articles []model.Article
+/*********************/
+/* ArticleRepository */
+/*********************/
+
+type IArticleRepository interface {
+	FindByPage(page int) (int, *[]common.Article, error)
+	FindBySlug(slug string) (*common.Article, error)
+	Create(article *common.Article) error
 }
 
-func (articleRepository *InMemoryArticleRepository) FindByPage(page int) (int, *[]model.Article, error) {
+type InMemoryArticleRepository struct {
+	Articles []common.Article
+}
+
+func (articleRepository *InMemoryArticleRepository) FindByPage(page int) (int, *[]common.Article, error) {
 	articleCount := len(articleRepository.Articles)
 
 	if page >= 0 {
@@ -25,11 +35,11 @@ func (articleRepository *InMemoryArticleRepository) FindByPage(page int) (int, *
 		}
 	}
 
-	articles := make([]model.Article, 0)
+	articles := make([]common.Article, 0)
 	return articleRepository.calculatePageCount(), &articles, nil
 }
 
-func (articleRepository *InMemoryArticleRepository) FindBySlug(slug string) (*model.Article, error) {
+func (articleRepository *InMemoryArticleRepository) FindBySlug(slug string) (*common.Article, error) {
 	for _, article := range articleRepository.Articles {
 		if article.Slug == slug {
 			return &article, nil
@@ -39,7 +49,7 @@ func (articleRepository *InMemoryArticleRepository) FindBySlug(slug string) (*mo
 	return nil, nil
 }
 
-func (articleRepository *InMemoryArticleRepository) Create(a *model.Article) error {
+func (articleRepository *InMemoryArticleRepository) Create(a *common.Article) error {
 	articleRepository.Articles = append(articleRepository.Articles, *a)
 	return nil
 }
@@ -49,5 +59,5 @@ func (articleRepository *InMemoryArticleRepository) calculatePageCount() int {
 }
 
 func NewInMemoryArticleRepository() IArticleRepository {
-	return &InMemoryArticleRepository{[]model.Article{}}
+	return &InMemoryArticleRepository{[]common.Article{}}
 }
